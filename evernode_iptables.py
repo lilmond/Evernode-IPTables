@@ -20,6 +20,7 @@ def main():
     print(f"Please make sure your OVH IP is correct before proceeding.\nOVH IP: {ovh_ip}\n")
 
     vps_ip = input("VPS IP: ").strip()
+    ssh_port = input("SSH Port: ")
     peer_port = intput("Peer Port: ")
     user_port = intput("User Port: ")
     tcp_port = intput("General TCP Port: ")
@@ -52,9 +53,11 @@ iptables -t nat -A POSTROUTING -d {vps_ip} -p udp --dport {udp_port}:{udp_port +
 iptables -t nat -A PREROUTING -d {ovh_ip} -p tcp --dport {peer_port}:{peer_port + 7} -j DNAT --to-destination {vps_ip}
 iptables -t nat -A PREROUTING -d {ovh_ip} -p tcp --dport {user_port}:{user_port + 7} -j DNAT --to-destination {vps_ip}
 iptables -t nat -A PREROUTING -d {ovh_ip} -p tcp --dport {tcp_port}:{tcp_port + 13} -j DNAT --to-destination {vps_ip}
-iptables -t nat -A PREROUTING -d {ovh_ip} -p udp --dport {udp_port}:{udp_port + 13} -j DNAT --to-destination {vps_ip}""")
+iptables -t nat -A PREROUTING -d {ovh_ip} -p udp --dport {udp_port}:{udp_port + 13} -j DNAT --to-destination {vps_ip}
+iptables -t nat -A PREROUTING -p tcp -d {ovh_ip} --dport {ssh_port} -j DNAT --to-destination {vps_ip}:22
+iptables -A FORWARD -p tcp -d {vps_ip} --dport 22 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT""")
 
-    print(f"\nIPTable rules have been set.")
+    print(f"\nIPTable rules have been set.\nPlease don't forget to manually set as persistent via:\napt install iptables-persistent\niptables-save > /etc/iptables/rules.v4\n")
 
 if __name__ == "__main__":
     try:
